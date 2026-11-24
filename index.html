@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jeff Interactive - Main page</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --navy: #01025e;
+    --navy-45: rgba(1, 2, 94, 0.45);
+    --card: #f0f1f8;
+    --foot-bg: #01025e;
+    --foot-fg: #ffffff;
+  }
+  body.dark {
+    --bg: #0b0b26;
+    --navy: #f5f5ff;
+    --navy-45: rgba(245, 245, 255, 0.5);
+    --card: #1b1b3d;
+    --foot-bg: #f5f5ff;
+    --foot-fg: #01025e;
+  }
+  html { scroll-behavior: smooth; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--navy);
+    background: var(--bg);
+    transition: background .25s ease, color .25s ease;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  /* Sticky header */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    padding: 24px 55px;
+    gap: 16px;
+    background: var(--bg);
+  }
+  .logo {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    overflow: hidden;
+    flex: none;
+    display: block;
+  }
+  .logo img { width: 100%; height: 100%; display: block; }
+  .brand { font-size: 22px; font-weight: 600; margin-left: 16px; }
+  nav { display: flex; gap: 48px; margin-left: 48px; }
+  nav a { font-size: 22px; font-weight: 300; color: var(--navy-45); transition: color .2s ease; }
+  nav a:hover, nav a.active { color: var(--navy); }
+  nav a.active { font-weight: 400; }
+
+  /* Dark mode toggle: inner ring turns clockwise, outer ring anticlockwise while pressed */
+  .theme {
+    margin-left: auto;
+    width: 38px; height: 38px;
+    padding: 0; border: none; background: none;
+    cursor: pointer;
+    flex: none;
+    transition: transform .6s ease;
+  }
+  .theme:hover { transform: scale(1.14); }
+  .theme svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .t-outer, .t-inner { transform-box: view-box; transform-origin: 165px 145px; }
+  @keyframes spinCW { to { transform: rotate(360deg); } }
+  @keyframes spinCCW { to { transform: rotate(-360deg); } }
+  .theme:active .t-inner { animation: spinCW 4s linear infinite; }
+  .theme:active .t-outer { animation: spinCCW 4s linear infinite; }
+
+  /* Icon colours follow the theme */
+  .n { fill: var(--navy); }
+  .b { fill: var(--bg); }
+  .sn { fill: var(--bg); stroke: var(--navy); stroke-width: 1.5; }
+  .arc { fill: none; stroke: var(--navy); stroke-width: 6; }
+  .arrow { fill: none; stroke: var(--bg); stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
+  .tb { fill: var(--bg); font-size: 40px; font-weight: 600; font-family: 'Inter', system-ui, sans-serif; }
+  .ico { display: block; height: auto; max-width: 100%; overflow: visible; }
+
+  /* Hero */
+  .hero {
+    min-height: calc(100vh - 100px);
+    display: grid;
+    grid-template-columns: 1fr 408px;
+    align-items: center;
+    gap: 40px;
+    padding: 0 55px;
+    position: relative;
+  }
+  .hero h1 {
+    font-weight: 400;
+    font-size: 50px;
+    line-height: 1.2;
+    max-width: 732px;
+  }
+  .buttons { margin-top: 48px; display: flex; flex-direction: column; gap: 22px; align-items: flex-start; }
+  .btn {
+    width: 289px; height: 70px;
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px 0 25px;
+    font-size: 26px; font-weight: 400;
+    border: 2px solid var(--navy);
+    transition: transform .3s ease, background .7s ease, color .7s ease;
+  }
+  .btn-solid { background: var(--navy); color: var(--bg); }
+  .btn-outline { background: transparent; color: var(--navy); }
+  .btn:hover { transform: translateY(-2px); }
+  .btn-outline:hover { background: var(--navy); color: var(--bg); }
+  .btn-solid:hover { background: var(--bg); color: var(--navy); }
+  .btn svg { width: 12px; height: 25px; }
+
+  /* Hero card stack: game cards rotate every 2 seconds */
+  .stack { position: relative; width: 408px; height: 535px; justify-self: end; }
+  .stack > .game {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%; min-height: 0;
+    opacity: 0;
+    transform: scale(.97) translateY(10px);
+    transition: opacity 1.2s ease, transform 1.2s ease, box-shadow .6s ease;
+    pointer-events: none;
+  }
+  .stack > .game.is-active { opacity: 1; transform: none; pointer-events: auto; }
+  .stack:hover > .game.is-active { transform: scale(1.04); box-shadow: 0 24px 50px rgba(1, 2, 94, 0.16); }
+  body.dark .stack:hover > .game.is-active { box-shadow: 0 24px 50px rgba(0, 0, 0, 0.4); }
+
+  .scroll-hint {
+    position: absolute;
+    left: 55px; bottom: 36px;
+    font-size: 22px; color: var(--navy-45);
+  }
+
+  /* Sections */
+  section { scroll-margin-top: 90px; padding: 120px 55px; }
+  h2 { font-weight: 400; font-size: 50px; line-height: 1.2; margin-bottom: 56px; }
+
+  .games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 408px));
+    gap: 48px 32px;
+  }
+  .game-item { display: flex; flex-direction: column; align-items: center; }
+  .game {
+    width: 100%;
+    background: var(--card);
+    border-radius: 32px;
+    padding: 36px 28px 28px;
+    min-height: 464px;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+  }
+  .game h3 { font-weight: 400; font-size: 40px; line-height: 1.15; }
+  .game .sub { font-size: 24px; color: var(--navy-45); margin-top: 6px; line-height: 1.3; }
+  .game .divider { width: 100%; border-top: 1px solid #b5b5c4; margin: 18px 0 22px; }
+  body.dark .game .divider { border-color: #5a5a80; }
+  .art { width: 100%; flex: 1; min-height: 130px; display: flex; align-items: center; justify-content: center; }
+  .game .desc { font-size: 22px; margin-top: 16px; }
+
+  /* Random mode: small circles cross-flash diagonally */
+  @keyframes dotA { 0% { fill: var(--bg); } 50% { fill: var(--navy); } 100% { fill: var(--bg); } }
+  @keyframes dotB { 0% { fill: var(--bg); } 50% { fill: var(--navy); } 100% { fill: var(--bg); } }
+  .game:hover .dot-a { animation: dotA 2.4s ease-in-out 0s 3; }
+  .game:hover .dot-b { animation: dotB 2.4s ease-in-out 1.2s 3; }
+
+  /* Taboo: navy bubble drops in from above, white bubble rises from below */
+  .taboo-img { display: grid; width: 160px; }
+  .taboo-img > img { grid-area: 1 / 1; width: 100%; height: auto; display: block; }
+  @keyframes bubDown { from { transform: translateY(-12px); opacity: .35; } to { transform: none; opacity: 1; } }
+  @keyframes bubUp { from { transform: translateY(12px); opacity: .35; } to { transform: none; opacity: 1; } }
+  .game:hover .bub-navy { animation: bubDown 1s ease-out both; }
+  .game:hover .bub-white { animation: bubUp 1s ease-out .12s both; }
+
+  /* Imposter: centre circle and its face flip colours, then slowly return */
+  @keyframes impC {
+    0% { fill: var(--navy); stroke: var(--navy); }
+    22% { fill: var(--bg); stroke: var(--navy); }
+    100% { fill: var(--navy); stroke: var(--navy); }
+  }
+  @keyframes impF {
+    0% { fill: var(--bg); }
+    22% { fill: var(--navy); }
+    100% { fill: var(--bg); }
+  }
+  .game:hover .imp-c { animation: impC 3.6s ease-in-out; }
+  .game:hover .imp-f { animation: impF 3.6s ease-in-out; }
+
+  /* Hangman: letters wave from left to right */
+  @keyframes wave {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .game:hover .hm { animation: wave 1.6s ease-in-out var(--d) 1; }
+
+  /* Speaking cards: navy highlight travels clockwise through the cells */
+  .sp0 { fill: var(--navy); }
+  @keyframes spHl {
+    0% { fill: var(--bg); }
+    15% { fill: var(--navy); }
+    35% { fill: var(--bg); }
+    100% { fill: var(--bg); }
+  }
+  .game:hover .sp0 { animation: spA 2s linear infinite; }
+  .game:hover .sp1 { animation: spB 2s linear infinite; }
+  .game:hover .sp2 { animation: spC 2s linear infinite; }
+  .game:hover .sp3 { animation: spD 2s linear infinite; }
+  @keyframes spA { 0% { fill: var(--bg); } 6% { fill: var(--navy); } 18% { fill: var(--bg); } 100% { fill: var(--bg); } }
+  @keyframes spB { 0%, 25% { fill: var(--bg); } 31% { fill: var(--navy); } 43%, 100% { fill: var(--bg); } }
+  @keyframes spC { 0%, 50% { fill: var(--bg); } 56% { fill: var(--navy); } 68%, 100% { fill: var(--bg); } }
+  @keyframes spD { 0%, 75% { fill: var(--bg); } 81% { fill: var(--navy); } 93%, 100% { fill: var(--bg); } }
+
+
+
+
+  .game-actions { display: flex; gap: 12px; align-items: center; margin-top: 16px; }
+  .info {
+    width: 63px; height: 57px;
+    border-radius: 20px;
+    background: var(--navy); color: var(--bg);
+    font-size: 30px; font-family: 'Courier New', Courier, monospace; font-weight: 400;
+    display: grid; place-items: center;
+    border: none; cursor: pointer;
+  }
+  .choose {
+    width: 177px; height: 57px;
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px;
+    background: var(--navy); color: var(--bg);
+    border: 2px solid var(--navy);
+    transition: background .7s ease, color .7s ease;
+  }
+  .choose:hover { background: var(--bg); color: var(--navy); }
+
+  .about-text {
+    font-size: 30px;
+    line-height: 1.5;
+    max-width: 1155px;
+  }
+
+  footer.site-footer {
+    background: var(--foot-bg);
+    color: var(--foot-fg);
+    min-height: 174px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 150px 0 55px;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .foot-brand { display: flex; align-items: center; gap: 16px; font-size: 26px; font-weight: 600; }
+  .foot-brand .logo { width: 40px; height: 40px; box-shadow: 0 0 0 2px var(--foot-fg); }
+  .foot-note { font-size: 22px; opacity: .7; }
+
+  /* Theme-specific image layers */
+  .taboo-img .icon-dark { display: none; }
+  body.dark .taboo-img .icon-light { display: none; }
+  body.dark .taboo-img .icon-dark { display: block; }
+
+  /* Game view (Taboo settings) */
+  .game-view { padding: 60px 55px 120px; scroll-margin-top: 90px; }
+  .gv-top { display: flex; align-items: center; gap: 32px; }
+  .gv-banner { flex: 1; display: flex; align-items: stretch; height: 150px; background: var(--card); border: 1px solid #b5b5c4; border-radius: 32px; overflow: hidden; }
+  body.dark .gv-banner { border-color: #5a5a80; }
+  .gv-art { width: 240px; flex: none; display: flex; align-items: center; justify-content: center; border-right: 1px solid #b5b5c4; }
+  body.dark .gv-art { border-color: #5a5a80; }
+  .gv-art .taboo-img { width: 150px; }
+  .gv-text { padding: 0 40px; display: flex; flex-direction: column; justify-content: center; }
+  .gv-text h2 { font-size: 56px; line-height: 1.05; font-weight: 400; margin: 0; }
+  .gv-text p { font-size: 26px; color: var(--navy-45); margin-top: 6px; }
+  .gv-buttons { display: flex; flex-direction: column; gap: 14px; flex: none; }
+  .gv-start, .gv-cancel { width: 134px; height: 50px; border-radius: 14px; font-size: 24px; display: flex; align-items: center; justify-content: center; border: 2px solid transparent; cursor: pointer; transition: background .6s ease, color .6s ease, border-color .6s ease; }
+  .gv-start { background: var(--navy); color: var(--bg); }
+  .gv-start:hover { background: var(--bg); color: var(--navy); border-color: var(--navy); }
+  .gv-cancel { background: var(--navy-45); color: var(--bg); }
+  .gv-cancel:hover { background: var(--navy); }
+  .gv-desc { font-size: 28px; line-height: 1.45; margin-top: 56px; max-width: 900px; }
+  .gv-sub { font-weight: 600; font-size: 34px; margin-top: 48px; }
+  .gv-settings { display: flex; justify-content: space-between; gap: 32px; margin-top: 28px; max-width: 1200px; flex-wrap: wrap; }
+  .gv-field { display: flex; flex-direction: column; gap: 22px; min-width: 260px; }
+  .gv-field label { font-size: 30px; font-weight: 600; }
+  .sel { position: relative; width: max-content; }
+  .sel select { appearance: none; -webkit-appearance: none; font: inherit; font-size: 24px; color: var(--navy); background: var(--card); border: 1px solid var(--navy-45); border-radius: 14px; padding: 8px 44px 8px 28px; cursor: pointer; min-width: 150px; }
+  .sel::after { content: '^'; position: absolute; right: 18px; top: 50%; transform: translateY(-60%); color: var(--navy); font-size: 20px; pointer-events: none; }
+  .gv-status { margin-top: 40px; font-size: 24px; color: var(--navy-45); min-height: 30px; }
+  @media (max-width: 860px) { .gv-top { flex-direction: column; align-items: stretch; } .gv-buttons { flex-direction: row; } .gv-art { width: 160px; } .game-view { padding: 40px 24px; } }
+
+  /* Taboo game screen */
+  .tg-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; }
+  .tg-back { width: 60px; height: 60px; border-radius: 16px; background: #ffd3d3; border: 1px solid #ff9a9a; color: #ff7a7a; display: flex; align-items: center; justify-content: center; font-size: 40px; line-height: 1; }
+  body.dark .tg-back { background: #3a2030; }
+  .tg-chips { display: flex; gap: 14px; align-items: center; }
+  .chip { min-width: 62px; height: 52px; padding: 0 16px; border: 1px solid var(--navy-45); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--navy-45); }
+  .chip-time { min-width: 157px; font-size: 30px; color: var(--navy); }
+  .tg-spacer { width: 60px; }
+  .tg-play { text-align: center; }
+  .tg-word { font-size: 64px; font-weight: 700; line-height: 1.1; }
+  .tg-taboo { list-style: none; margin-top: 18px; font-size: 36px; font-weight: 600; line-height: 1.5; }
+  .tg-actions { display: flex; justify-content: center; gap: 14px; margin-top: 56px; }
+  .tg-btn { width: 210px; height: 56px; border-radius: 14px; border: none; font-size: 26px; color: #fff; cursor: pointer; transition: filter .3s ease, transform .2s ease; }
+  .tg-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+  .tg-ok { background: #8dbfa4; }
+  .tg-viol { background: #b5b5b5; }
+  .tg-pass { background: #ff8a8a; }
+  .tg-end { text-align: center; padding-top: 60px; }
+  .tg-end h2 { font-size: 56px; font-weight: 700; }
+  .tg-stats { display: flex; justify-content: center; gap: 56px; margin: 36px 0 48px; }
+  .tg-stats div { display: flex; flex-direction: column; align-items: center; font-size: 24px; }
+  .num { font-size: 56px; color: var(--navy-45); }
+  .num.ok { color: #3dbb7a; }
+  .num.bad { color: #e88a8a; }
+  .tg-end .gv-start { width: 200px; }
+
+  /* Responsive */
+  @media (max-width: 1100px) {
+    .hero h1 { font-size: 40px; }
+    nav { margin-left: 24px; gap: 28px; }
+    h2 { font-size: 40px; }
+  }
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; justify-items: start; padding: 40px 24px 80px; min-height: auto; }
+    .stack { justify-self: center; }
+    .scroll-hint { display: none; }
+    header { padding: 20px 24px; }
+    .brand { display: none; }
+    section { padding: 80px 24px; }
+    footer.site-footer { padding: 32px 24px; }
+  }
+  @media (max-width: 520px) {
+    .hero h1 { font-size: 32px; }
+    h2 { font-size: 32px; }
+    nav a { font-size: 18px; }
+    .btn { width: 100%; max-width: 289px; }
+    .about-text { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="#top" class="logo" aria-label="Home"><img src="assets/logo.png" alt="Jeff Interactive logo"></a>
+  <span class="brand">Jeff Interactive</span>
+  <nav>
+    <a href="#games" class="nav-link" data-target="games">Games</a>
+    <a href="#about" class="nav-link" data-target="about">About</a>
+  </nav>
+  <button class="theme" id="themeToggle" aria-label="Dark mode" aria-pressed="false">
+    <svg viewBox="0 0 320 311" aria-hidden="true">
+      <g class="t-outer">
+        <path class="b" d="M165 37 A108 108 0 0 0 165 253 Z"/>
+        <path class="n" d="M165 37 A108 108 0 0 1 165 253 Z"/>
+        <path class="arc" d="M165 37 A108 108 0 0 0 165 253"/>
+      </g>
+      <g class="t-inner">
+        <path class="n" d="M165 73 A72 72 0 0 0 165 217 Z"/>
+        <path class="b" d="M165 73 A72 72 0 0 1 165 217 Z"/>
+      </g>
+    </svg>
+  </button>
+</header>
+
+<main id="top">
+  <div id="home">
+  <section class="hero" style="padding-top: 0; padding-bottom: 0; scroll-margin-top: 0;">
+    <div>
+      <h1>Make your speaking lessons even more engaging with interactive games</h1>
+      <div class="buttons">
+        <a class="btn btn-solid" href="#games">Get started
+          <svg viewBox="0 0 12 25" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 2l9 10.5L2 23"/></svg>
+        </a>
+        <a class="btn btn-outline" href="#about">More about Jeff
+          <svg viewBox="0 0 12 25" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 2l9 10.5L2 23"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="stack" id="heroStack" aria-label="Game preview"></div>
+
+    <div class="scroll-hint">Scroll down for more ↓</div>
+  </section>
+
+  <section id="games">
+    <h2>Pick a game and get your class talking</h2>
+    <div class="games-grid">
+
+      <div class="game-item">
+        <article class="game">
+          <h3>Random mode</h3>
+          <div class="sub">Surprise your class with a random game</div>
+          <div class="divider"></div>
+          <div class="art">
+            <svg class="ico" style="width:220px" viewBox="0 0 330 185" aria-hidden="true">
+              <circle class="sn dot-a" cx="36" cy="60" r="28"/>
+              <circle class="sn dot-b" cx="36" cy="124" r="28"/>
+              <circle class="sn dot-b" cx="298" cy="60" r="28"/>
+              <circle class="sn dot-a" cx="298" cy="124" r="28"/>
+              <circle class="n" cx="167" cy="92" r="87"/>
+              <g transform="translate(167 92) scale(1.15)">
+                <path class="arrow" d="M-46 -28 H-30 C-14 -28 -6 -10 0 0 C6 10 14 28 30 28 H44"/>
+                <path class="arrow" d="M36 19 L46 28 L36 37"/>
+                <path class="arrow" d="M-46 28 H-30 C-14 28 -6 10 0 0 C6 -10 14 -28 30 -28 H44"/>
+                <path class="arrow" d="M36 -37 L46 -28 L36 -19"/>
+              </g>
+            </svg>
+          </div>
+          <div class="desc">Let luck decide</div>
+        </article>
+        <div class="game-actions">
+          <button class="info" aria-label="Info about Random mode">i</button>
+          <a class="choose" href="#random">Choose</a>
+        </div>
+      </div>
+
+      <div class="game-item">
+        <article class="game">
+          <h3>Taboo</h3>
+          <div class="sub">Describe a word</div>
+          <div class="divider"></div>
+          <div class="art">
+            <div class="taboo-img">
+              <img class="bub-white icon-light" src="assets/bub-white.png" alt="">
+              <img class="bub-white icon-dark" src="assets/bub-white-dark.png" alt="">
+              <img class="bub-navy icon-light" src="assets/bub-navy.png" alt="">
+              <img class="bub-navy icon-dark" src="assets/bub-navy-dark.png" alt="">
+            </div>
+          </div>
+          <div class="desc">Do not use chosen words</div>
+        </article>
+        <div class="game-actions">
+          <button class="info" aria-label="Info about Taboo">i</button>
+          <a class="choose" href="#taboo">Choose</a>
+        </div>
+      </div>
+
+      <div class="game-item">
+        <article class="game">
+          <h3>Imposter</h3>
+          <div class="sub">Find the pretender</div>
+          <div class="divider"></div>
+          <div class="art">
+            <svg class="ico" style="width:300px" viewBox="0 0 370 145" aria-hidden="true">
+              <circle class="n imp-c" cx="186" cy="72" r="60"/>
+              <circle class="sn" cx="74" cy="72" r="67"/>
+              <circle class="sn" cx="298" cy="72" r="67"/>
+              <path class="n" d="M33 59 A18.5 18.5 0 0 1 70 59 Z"/>
+              <path class="n" d="M78 59 A18.5 18.5 0 0 1 115 59 Z"/>
+              <path class="n" d="M44.5 83 H103.5 A29.5 29.5 0 0 1 44.5 83 Z"/>
+              <path class="n" d="M257 59 A18.5 18.5 0 0 1 294 59 Z"/>
+              <path class="n" d="M302 59 A18.5 18.5 0 0 1 339 59 Z"/>
+              <path class="n" d="M269 83 H327 A29 29 0 0 1 269 83 Z"/>
+              <path class="b imp-f" d="M145 42 L181 52 Q181 66 163 66 Q145 66 145 42 Z"/>
+              <path class="b imp-f" d="M227 42 L191 52 Q191 66 209 66 Q227 66 227 42 Z"/>
+              <path class="b imp-f" d="M157 81 H215 A29 29 0 0 1 157 81 Z"/>
+            </svg>
+          </div>
+          <div class="desc">Guess the imposter</div>
+        </article>
+        <div class="game-actions">
+          <button class="info" aria-label="Info about Imposter">i</button>
+          <a class="choose" href="#imposter">Choose</a>
+        </div>
+      </div>
+
+      <div class="game-item">
+        <article class="game">
+          <h3>Hangman</h3>
+          <div class="sub">Find the hidden word</div>
+          <div class="divider"></div>
+          <div class="art">
+            <svg class="ico" style="width:300px" viewBox="0 0 380 78" aria-hidden="true">
+              <g class="hm" style="--d:0s"><rect class="n" x="7" y="8" width="63" height="63" rx="10"/><text class="tb" x="38.5" y="56" text-anchor="middle">A</text></g>
+              <g class="hm" style="--d:.15s"><rect class="sn" x="83" y="8" width="63" height="63" rx="10"/></g>
+              <g class="hm" style="--d:.3s"><rect class="sn" x="159" y="8" width="63" height="63" rx="10"/></g>
+              <g class="hm" style="--d:.45s"><rect class="n" x="235" y="8" width="63" height="63" rx="10"/><text class="tb" x="266.5" y="56" text-anchor="middle">L</text></g>
+              <g class="hm" style="--d:.6s"><rect class="sn" x="311" y="8" width="63" height="63" rx="10"/></g>
+            </svg>
+          </div>
+          <div class="desc">Choose your letters wisely</div>
+        </article>
+        <div class="game-actions">
+          <button class="info" aria-label="Info about Hangman">i</button>
+          <a class="choose" href="#hangman">Choose</a>
+        </div>
+      </div>
+
+      <div class="game-item">
+        <article class="game">
+          <h3>Speaking cards</h3>
+          <div class="sub">Get a random topic</div>
+          <div class="divider"></div>
+          <div class="art">
+            <svg class="ico" style="width:200px" viewBox="0 0 312 160" aria-hidden="true">
+              <rect class="sn sp sp3" x="5" y="5" width="143" height="67" rx="12"/>
+              <rect class="sn sp sp0" x="163" y="5" width="143" height="67" rx="12"/>
+              <rect class="sn sp sp2" x="5" y="88" width="143" height="67" rx="12"/>
+              <rect class="sn sp sp1" x="163" y="88" width="143" height="67" rx="12"/>
+            </svg>
+          </div>
+          <div class="desc">Explain your ideas in detail</div>
+        </article>
+        <div class="game-actions">
+          <button class="info" aria-label="Info about Speaking cards">i</button>
+          <a class="choose" href="#speaking-cards">Choose</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="about">
+    <h2>About Jeff Interactive</h2>
+    <p class="about-text">We believe that learning English should be more than studying grammar and memorizing vocabulary. Learning English should be a enjoyable and interactive experience. Learning English should feel like a conversation, not a classroom drill. Created by a Jeff Colleges student, this platform is designed to make speaking lessons more dynamic. Speaking lessons are powered by a variety of games and activities. From Taboo, Imposter and Hangman to Speaking Cards, every activity is designed to encourage communication, expand vocabulary, improve fluency and build confidence in speaking English.</p>
+  </section>
+  </div>
+
+  <section class="game-view" id="view-taboo" aria-labelledby="taboo-title" hidden>
+    <div class="gv-top">
+      <div class="gv-banner">
+        <div class="gv-art">
+          <div class="taboo-img">
+            <img class="bub-white icon-light" src="assets/bub-white.png" alt="">
+            <img class="bub-white icon-dark" src="assets/bub-white-dark.png" alt="">
+            <img class="bub-navy icon-light" src="assets/bub-navy.png" alt="">
+            <img class="bub-navy icon-dark" src="assets/bub-navy-dark.png" alt="">
+          </div>
+        </div>
+        <div class="gv-text">
+          <h2 id="taboo-title">Taboo</h2>
+          <p>Get your team to guess the word</p>
+        </div>
+      </div>
+      <div class="gv-buttons">
+        <button class="gv-start" id="tbStart" type="button">Start</button>
+        <a class="gv-cancel" href="#games">Cancel</a>
+      </div>
+    </div>
+
+    <p class="gv-desc">Describe the word on the card to your team without using any of the forbidden words. The team with the most correct guesses wins.</p>
+    <h3 class="gv-sub">Customize your game</h3>
+
+    <div class="gv-settings">
+      <div class="gv-field">
+        <label for="tbLevel">Language level</label>
+        <div class="sel"><select id="tbLevel">
+          <option>A1</option><option>A2</option><option>B1</option><option>B1+</option><option selected>B2</option><option>C1</option>
+        </select></div>
+      </div>
+      <div class="gv-field">
+        <label for="tbTeams">Number of teams</label>
+        <div class="sel"><select id="tbTeams">
+          <option selected>2</option><option>3</option><option>4</option>
+        </select></div>
+      </div>
+      <div class="gv-field">
+        <label for="tbTime">Time limit</label>
+        <div class="sel"><select id="tbTime">
+          <option value="30">30 sec</option><option value="60" selected>1 min</option><option value="90">1 min 30 sec</option><option value="120">2 min</option><option value="150">2 min 30 sec</option><option value="180">3 min</option>
+        </select></div>
+      </div>
+    </div>
+
+    <div class="gv-status" id="tbStatus" aria-live="polite"></div>
+  </section>
+  <section class="game-view" id="view-taboo-game" aria-label="Taboo game" hidden>
+    <div class="tg-top">
+      <a class="tg-back" href="#taboo" aria-label="Back">&#8249;</a>
+      <div class="tg-chips">
+        <span class="chip" id="tgLevel">B2</span>
+        <span class="chip chip-time" id="tgTime">00:00</span>
+        <span class="chip" id="tgTeam">T1</span>
+      </div>
+      <span class="tg-spacer"></span>
+    </div>
+    <div class="tg-play" id="tgPlay">
+      <div class="tg-word" id="tgWord"></div>
+      <ul class="tg-taboo" id="tgTaboo"></ul>
+      <div class="tg-actions">
+        <button class="tg-btn tg-ok" id="tgOk" type="button">Correct</button>
+        <button class="tg-btn tg-viol" id="tgViol" type="button">Violation</button>
+        <button class="tg-btn tg-pass" id="tgPass" type="button">Pass</button>
+      </div>
+    </div>
+    <div class="tg-end" id="tgEnd" hidden>
+      <h2>Round finished!</h2>
+      <div class="tg-stats">
+        <div><span class="num ok" id="sFound">0</span><span>found</span></div>
+        <div><span class="num" id="sViol">0</span><span>violation</span></div>
+        <div><span class="num bad" id="sPass">0</span><span>passed</span></div>
+      </div>
+      <button class="gv-start" id="tgNext" type="button">Next round</button>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="foot-brand"><span class="logo"><img src="assets/logo.png" alt=""></span>Jeff Interactive</div>
+  <div class="foot-note">Designed and Coded by students</div>
+</footer>
+
+<script>
+  // Dark mode toggle
+  const themeToggle = document.getElementById('themeToggle');
+  themeToggle.addEventListener('click', () => {
+    const on = document.body.classList.toggle('dark');
+    themeToggle.setAttribute('aria-pressed', String(on));
+  });
+
+  // Highlight the nav label of the section currently in view
+  const navLinks = document.querySelectorAll('.nav-link');
+  const sections = ['games', 'about'].map(id => document.getElementById(id));
+  function updateActiveNav() {
+    const y = window.scrollY + 160;
+    let current = null;
+    sections.forEach(s => { if (s.offsetTop <= y) current = s.id; });
+    navLinks.forEach(link => {
+      link.classList.toggle('active', link.dataset.target === current);
+    });
+  }
+  window.addEventListener('scroll', updateActiveNav, { passive: true });
+  updateActiveNav();
+
+  // Hero card stack: every 2 seconds the next game card fades in; hovering freezes it
+  const gameCards = [...document.querySelectorAll('.games-grid .game')];
+  const stack = document.getElementById('heroStack');
+  const order = [1, 0, 2, 3, 4]; // starts with Taboo, then the other games
+  const stackCards = order.map(i => {
+    const clone = gameCards[i].cloneNode(true);
+    stack.appendChild(clone);
+    return clone;
+  });
+  let current = 0;
+  let paused = false;
+  stackCards[0].classList.add('is-active');
+  stack.addEventListener('mouseenter', () => { paused = true; });
+  stack.addEventListener('mouseleave', () => { paused = false; });
+  setInterval(() => {
+    if (paused) return;
+    stackCards[current].classList.remove('is-active');
+    current = (current + 1) % stackCards.length;
+    stackCards[current].classList.add('is-active');
+  }, 2000);
+
+  // Taboo word bank: 20 cards per level (target word + 4 forbidden words)
+  const WORDS = {
+    A1: [
+      ['Dog','Animal','Bark','Pet','Tail'], ['Water','Drink','Rain','Thirsty','Glass'], ['Book','Read','Page','Story','Library'], ['School','Teacher','Student','Class','Learn'], ['Table','Chair','Furniture','Kitchen','Wood'], ['Sun','Hot','Day','Light','Sky'], ['Bread','Eat','Butter','Bake','Toast'], ['Car','Drive','Road','Engine','Vehicle'], ['Rain','Wet','Cloud','Umbrella','Storm'], ['Friend','Best','Play','Talk','Share'], ['Bed','Sleep','Night','Pillow','Room'], ['Apple','Fruit','Red','Tree','Eat'], ['Door','Open','Close','House','Key'], ['Cat','Meow','Pet','Milk','Fur'], ['Shop','Buy','Money','Store','Sell'], ['Morning','Wake','Breakfast','Early','Coffee'], ['Hand','Finger','Arm','Body','Glove'], ['Doctor','Hospital','Sick','Nurse','Medicine'], ['Pen','Write','Paper','Pencil','Ink'], ['Summer','Hot','Beach','Holiday','Season']
+    ],
+    A2: [
+      ['Breakfast','Morning','Eat','Coffee','Egg'], ['Holiday','Trip','Travel','Vacation','Beach'], ['Airport','Plane','Flight','Ticket','Luggage'], ['Hospital','Doctor','Nurse','Sick','Patient'], ['Kitchen','Cook','Oven','Fridge','Food'], ['Mirror','Reflection','Glass','Look','Face'], ['Bank','Money','Account','Loan','Cash'], ['Umbrella','Rain','Wet','Hold','Shade'], ['Football','Ball','Goal','Team','Player'], ['Teacher','School','Class','Lesson','Exam'], ['Cinema','Movie','Film','Popcorn','Screen'], ['Weekend','Saturday','Sunday','Rest','Free'], ['Garden','Flowers','Plant','Grass','Dig'], ['Phone','Call','Mobile','Text','Ring'], ['Train','Station','Track','Ticket','Railway'], ['Dentist','Teeth','Brush','Pain','Clinic'], ['Shoes','Foot','Wear','Boots','Sport'], ['Birthday','Party','Cake','Gift','Candles'], ['Hair','Head','Brush','Cut','Salon'], ['Market','Fruit','Vegetables','Buy','Stall']
+    ],
+    B1: [
+      ['Recycle','Plastic','Bin','Environment','Reuse'], ['Promise','Word','Keep','Trust','Agree'], ['Experience','Learn','Past','Practice','Life'], ['Journey','Trip','Road','Travel','Distance'], ['Challenge','Difficult','Problem','Hard','Task'], ['Neighbour','House','Next','Door','Street'], ['Exercise','Gym','Fit','Run','Healthy'], ['Secret','Hide','Tell','Private','Keep'], ['Adventure','Explore','Danger','Brave','Journey'], ['Memory','Remember','Brain','Forget','Past'], ['Dream','Sleep','Night','Imagine','Wish'], ['Opinion','Think','View','Believe','Agree'], ['Guess','Answer','Maybe','Try','Question'], ['Festival','Music','Celebrate','Crowd','Party'], ['Advice','Help','Suggest','Tip','Recommend'], ['Bridge','River','Cross','Build','Steel'], ['Quality','Good','Standard','Better','Value'], ['Improve','Better','Progress','Develop','Practice'], ['Warning','Danger','Alert','Caution','Sign'], ['Relationship','Love','Couple','Friend','Bond']
+    ],
+    'B1+': [
+      ['Ambition','Goal','Aim','Success','Dream'], ['Hypothesis','Theory','Test','Scientist','Prove'], ['Negotiate','Deal','Agreement','Bargain','Discuss'], ['Sustainable','Environment','Future','Resource','Green'], ['Hesitate','Pause','Doubt','Wait','Unsure'], ['Reluctant','Unwilling','Refuse','Dislike','Grudging'], ['Accomplish','Achieve','Finish','Complete','Success'], ['Emerge','Appear','Rise','Surface','Show'], ['Overwhelm','Stress','Pressure','Flood','Burden'], ['Hospitality','Hotel','Guest','Welcome','Service'], ['Reputation','Image','Name','Trust','Fame'], ['Deadline','Time','Late','Finish','Project'], ['Ingredient','Recipe','Food','Mix','Cook'], ['Bureaucracy','Office','Paper','Rules','Government'], ['Tolerance','Accept','Patience','Respect','Allow'], ['Nostalgia','Memory','Past','Childhood','Miss'], ['Procrastinate','Delay','Postpone','Later','Lazy'], ['Confidence','Believe','Sure','Brave','Trust'], ['Curiosity','Question','Wonder','Interest','Learn'], ['Solution','Answer','Fix','Problem','Solve']
+    ],
+    B2: [
+      ['Achievement','Success','Award','Goal','Proud'], ['Compromise','Agree','Middle','Give','Deal'], ['Scenery','View','Landscape','Mountain','Nature'], ['Budget','Money','Plan','Spend','Cost'], ['Anxiety','Worry','Nervous','Stress','Fear'], ['Consequence','Result','Effect','Outcome','Cause'], ['Frustrating','Annoying','Angry','Irritate','Patience'], ['Ancient','Old','History','Rome','Past'], ['Awareness','Know','Realise','Conscious','Attention'], ['Hazard','Danger','Risk','Harm','Safety'], ['Overcome','Defeat','Beat','Problem','Win'], ['Reliable','Trust','Depend','Good','Consistent'], ['Subtle','Slight','Hidden','Delicate','Small'], ['Apologise','Sorry','Regret','Forgive','Mistake'], ['Environment','Nature','Pollution','Earth','Climate'], ['Tradition','Custom','Culture','Old','Family'], ['Economy','Money','Market','Trade','Business'], ['Strategy','Plan','Tactic','Goal','Method'], ['Judgement','Decide','Opinion','Court','Verdict'], ['Fortune','Luck','Money','Wealth','Chance']
+    ],
+    C1: [
+      ['Ubiquitous','Everywhere','Common','Universal','Presence'], ['Ambiguous','Unclear','Vague','Doubtful','Meaning'], ['Meticulous','Detail','Careful','Precise','Thorough'], ['Resilience','Recover','Bounce','Strong','Endure'], ['Equilibrium','Balance','Stable','Equal','Harmony'], ['Pragmatic','Practical','Realistic','Useful','Sensible'], ['Eloquent','Speech','Fluent','Persuasive','Articulate'], ['Inevitable','Certain','Unavoidable','Destined','Fate'], ['Scrutinize','Examine','Inspect','Analyse','Closely'], ['Ephemeral','Brief','Temporary','Fleeting','Short'], ['Discrepancy','Difference','Gap','Mismatch','Inconsistent'], ['Tenacious','Persistent','Determined','Stubborn','Hold'], ['Juxtapose','Compare','Contrast','Side','Adjacent'], ['Paradox','Contradiction','Logic','Puzzle','Absurd'], ['Pervasive','Spread','Widespread','Influence','Throughout'], ['Candid','Honest','Frank','Open','Direct'], ['Intricate','Complex','Detailed','Complicated','Elaborate'], ['Ostensibly','Apparently','Seemingly','Outwardly','Supposed'], ['Lucid','Clear','Bright','Understandable','Rational'], ['Obsolete','Outdated','Old','Replaced','Dated']
+    ]
+  };
+
+  // Taboo game screen
+  const gameView = document.getElementById('view-taboo-game');
+  const tgWord = document.getElementById('tgWord');
+  const tgTaboo = document.getElementById('tgTaboo');
+  const tgPlay = document.getElementById('tgPlay');
+  const tgEnd = document.getElementById('tgEnd');
+  const tgTime = document.getElementById('tgTime');
+  let cfg = { level: 'B2', teams: 2, time: 60 };
+  let deck = [], idx = 0, found = 0, viol = 0, passed = 0, remaining = 0, timerId = null, team = 1;
+
+  function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+  function showCard() {
+    const card = deck[idx];
+    tgWord.textContent = card[0];
+    tgTaboo.innerHTML = card.slice(1).map(w => '<li>' + w + '</li>').join('');
+  }
+  function updateTimer() {
+    const m = Math.floor(remaining / 60), s = remaining % 60;
+    tgTime.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  }
+  function nextCard(kind) {
+    if (kind === 'ok') found++; else if (kind === 'viol') viol++; else passed++;
+    idx++;
+    if (idx >= deck.length) { deck = shuffle(deck); idx = 0; }
+    showCard();
+  }
+  function endRound() {
+    document.getElementById('sFound').textContent = found;
+    document.getElementById('sViol').textContent = viol;
+    document.getElementById('sPass').textContent = passed;
+    tgPlay.hidden = true;
+    tgEnd.hidden = false;
+  }
+  function startRound() {
+    clearInterval(timerId);
+    deck = shuffle(WORDS[cfg.level].slice());
+    idx = 0; found = 0; viol = 0; passed = 0;
+    document.getElementById('tgLevel').textContent = cfg.level;
+    document.getElementById('tgTeam').textContent = 'T' + team;
+    tgPlay.hidden = false;
+    tgEnd.hidden = true;
+    showCard();
+    remaining = cfg.time;
+    updateTimer();
+    timerId = setInterval(() => {
+      remaining--;
+      updateTimer();
+      if (remaining <= 0) { clearInterval(timerId); endRound(); }
+    }, 1000);
+  }
+  document.getElementById('tgOk').addEventListener('click', () => nextCard('ok'));
+  document.getElementById('tgViol').addEventListener('click', () => nextCard('viol'));
+  document.getElementById('tgPass').addEventListener('click', () => nextCard('pass'));
+  document.getElementById('tgNext').addEventListener('click', () => {
+    team = team % cfg.teams + 1;
+    startRound();
+  });
+
+  // Routing: #taboo shows the Taboo settings page, #taboo-game the game screen, other links the home page
+  const homeEl = document.getElementById('home');
+  const tabooView = document.getElementById('view-taboo');
+  function route() {
+    const h = location.hash.slice(1);
+    const showGame = h === 'taboo-game';
+    const showTaboo = h === 'taboo';
+    homeEl.hidden = showTaboo || showGame;
+    tabooView.hidden = !showTaboo;
+    gameView.hidden = !showGame;
+    if (showGame) { window.scrollTo({ top: 0 }); startRound(); }
+    else { clearInterval(timerId); }
+    if (showTaboo) { window.scrollTo({ top: 0 }); }
+    else if (!showGame && h && document.getElementById(h)) { document.getElementById(h).scrollIntoView(); }
+  }
+  window.addEventListener('hashchange', route);
+
+  // Start: save the chosen settings and open the game screen
+  document.getElementById('tbStart').addEventListener('click', () => {
+    cfg = {
+      level: document.getElementById('tbLevel').value,
+      teams: Number(document.getElementById('tbTeams').value),
+      time: Number(document.getElementById('tbTime').value)
+    };
+    team = 1;
+    location.hash = 'taboo-game';
+  });
+  route();
+</script>
+</body>
+</html>
